@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>婚活フェルミ推定ツール｜あなたの条件、何人いる？</title>
+
+  <!-- OGP / Twitter Card -->
+  <meta property="og:title" content="婚活フェルミ推定ツール｜あなたの条件、何人いる？">
+  <meta property="og:description" content="年齢・年収・身長・学歴・職業など15項目の条件を設定すると、日本の統計データをもとに「該当する未婚男性が何人いるか」をリアルタイムに推定します。条件を絞りすぎていませんか？">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="ogp.svg">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:site_name" content="婚活フェルミ推定ツール">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="婚活フェルミ推定ツール｜あなたの条件、何人いる？">
+  <meta name="twitter:description" content="年収・身長・学歴・職業など15項目の条件を絞ると「該当する未婚男性が何人いるか」を国の統計から推定。条件を絞りすぎていませんか？">
+  <meta name="twitter:image" content="ogp.svg">
+  <!-- ⚠️ デプロイ後、上記 ogp.svg を絶対URL（例: https://yoursite.com/ogp.svg）に書き換えてください -->
+
+  <!-- SEO -->
+  <meta name="description" content="年齢・年収・身長・学歴・職業など15項目の条件を設定すると、日本の統計データをもとに「該当する未婚男性が何人いるか」をリアルタイムに推定します。">
+
+  <!-- OGP画像をCanvasで動的生成してmetaタグを更新 -->
+  <script>
+    // デプロイ後にog:imageのURLを自分のドメインに書き換えてください
+    // 例: <meta property="og:image" content="https://yoursite.com/ogp.png">
+  </script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 20px;
+      max-width: 940px;
+      width: 100%;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+
+    /* 左パネル */
+    .left-panel h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .reset-btn {
+      margin-left: auto;
+      font-size: 13px;
+      color: #666;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 8px;
+      padding: 4px 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .reset-btn:hover { background: #e0e0e0; }
+
+    /* セクション区切り */
+    .section-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: #aaa;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 0 4px;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: 2px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid #f7f7f7;
+      gap: 10px;
+    }
+    .row:last-child { border-bottom: none; }
+
+    .row-icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+
+    .row-label {
+      font-size: 13px;
+      color: #333;
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .row-control { display: flex; align-items: center; }
+
+    select {
+      appearance: none;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 6px 30px 6px 10px;
+      font-size: 12px;
+      color: #333;
+      cursor: pointer;
+      font-family: inherit;
+      min-width: 155px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 9px center;
+    }
+    select:focus { outline: 2px solid #7c6af5; border-color: transparent; }
+
+    /* トグル */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #333;
+    }
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 26px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 26px;
+      cursor: pointer;
+      transition: .3s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      left: 3px; top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: .3s;
+    }
+    input:checked + .slider { background: #7c6af5; }
+    input:checked + .slider::before { transform: translateX(22px); }
+    .toggle-label { font-weight: 600; min-width: 30px; font-size: 12px; }
+
+    /* 右パネル */
+    .right-panel { display: flex; flex-direction: column; gap: 16px; }
+
+    .result-header {
+      text-align: center;
+      padding-bottom: 4px;
+    }
+    .result-header h2 {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .result-subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .result-count {
+      font-size: 64px;
+      font-weight: 800;
+      color: #1a1a2e;
+      line-height: 1;
+      margin-bottom: 8px;
+      letter-spacing: -2px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .badge-desc {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-box {
+      background: #f8f8f8;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #333;
+    }
+    .stat-label { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.4; }
+
+    /* 条件ごとの絞り込み */
+    .breakdown-card h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .breakdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+    .breakdown-label {
+      font-size: 11px;
+      color: #555;
+      width: 148px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bar-wrap {
+      flex: 1;
+      height: 16px;
+      background: #eee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      background: #1a1a2e;
+    }
+    .bar-fill.highlight { background: #7c6af5; }
+    .breakdown-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: #333;
+      width: 78px;
+      text-align: right;
+    }
+
+    .data-note {
+      font-size: 10px;
+      color: #bbb;
+      text-align: right;
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 760px) {
+      .container { grid-template-columns: 1fr; }
+      body { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 左：条件パネル -->
+  <div class="card left-panel">
+    <h2>
+      ⚙️ 条件を選択
+      <button class="reset-btn" onclick="resetAll()">リセット</button>
+    </h2>
+
+    <!-- ── 基本属性 ── -->
+    <div class="section-header">基本属性</div>
+
+    <div class="row">
+      <span class="row-icon">🎂</span>
+      <span class="row-label">年齢</span>
+      <div class="row-control">
+        <select id="age">
+          <option value="all">指定なし（20〜64歳）</option>
+          <option value="20-24">20〜24歳</option>
+          <option value="25-29" selected>25〜29歳</option>
+          <option value="30-34">30〜34歳</option>
+          <option value="35-39">35〜39歳</option>
+          <option value="40-44">40〜44歳</option>
+          <option value="45-49">45〜49歳</option>
+          <option value="50-54">50〜54歳</option>
+          <option value="55-59">55〜59歳</option>
+          <option value="60-64">60〜64歳</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">📍</span>
+      <span class="row-label">居住地域</span>
+      <div class="row-control">
+        <select id="region">
+          <option value="all" selected>全国</option>
+          <option value="tokyo">東京都</option>
+          <option value="metro">首都圏（東京・神奈川・埼玉・千葉）</option>
+          <option value="kinki">近畿圏（大阪・兵庫・京都・奈良）</option>
+          <option value="urban">三大都市圏（首都圏＋近畿＋中京）</option>
+          <option value="rural">地方（三大都市圏以外）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">📏</span>
+      <span class="row-label">身長</span>
+      <div class="row-control">
+        <select id="height">
+          <option value="all">指定なし</option>
+          <option value="160">160cm以上</option>
+          <option value="165">165cm以上</option>
+          <option value="170" selected>170cm以上</option>
+          <option value="175">175cm以上</option>
+          <option value="180">180cm以上</option>
+          <option value="185">185cm以上</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">⚖️</span>
+      <span class="row-label">体型（BMI）</span>
+      <div class="row-control">
+        <select id="bmi">
+          <option value="all" selected>指定なし</option>
+          <option value="normal">標準体型（BMI 18.5〜25）</option>
+          <option value="slim">細め〜標準（BMI 18.5〜23）</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── 経済 ── -->
+    <div class="section-header">経済・職業</div>
+
+    <div class="row">
+      <span class="row-icon">💰</span>
+      <span class="row-label">年収</span>
+      <div class="row-control">
+        <select id="income">
+          <option value="all">指定なし</option>
+          <option value="300">300万円以上</option>
+          <option value="400">400万円以上</option>
+          <option value="500">500万円以上</option>
+          <option value="600">600万円以上</option>
+          <option value="700">700万円以上</option>
+          <option value="800" selected>800万円以上</option>
+          <option value="1000">1,000万円以上</option>
+          <option value="1200">1,200万円以上</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">🏦</span>
+      <span class="row-label">資産額</span>
+      <div class="row-control">
+        <select id="asset">
+          <option value="all">指定なし</option>
+          <option value="500">500万円以上</option>
+          <option value="1000" selected>1,000万円以上</option>
+          <option value="2000">2,000万円以上</option>
+          <option value="3000">3,000万円以上</option>
+          <option value="5000">5,000万円以上</option>
+          <option value="10000">1億円以上</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">📉</span>
+      <span class="row-label">借金なし（貯蓄超過）</span>
+      <div class="row-control">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="nodebt" onchange="calc()">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label" id="nodebtLabel">OFF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">💼</span>
+      <span class="row-label">職業</span>
+      <div class="row-control">
+        <select id="job">
+          <option value="all" selected>指定なし</option>
+          <option value="company">会社員・公務員</option>
+          <option value="pro">医師・弁護士・公認会計士</option>
+          <option value="it">IT・エンジニア職</option>
+          <option value="exec">管理職・役員</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── 学歴 ── -->
+    <div class="section-header">学歴</div>
+
+    <div class="row">
+      <span class="row-icon">🎓</span>
+      <span class="row-label">学歴</span>
+      <div class="row-control">
+        <select id="edu">
+          <option value="all">指定なし</option>
+          <option value="university">大学卒以上</option>
+          <option value="march" selected>MARCH・関関同立以上</option>
+          <option value="top">旧帝大・早慶・上位国立以上</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── 健康・生活習慣 ── -->
+    <div class="section-header">健康・生活習慣</div>
+
+    <div class="row">
+      <span class="row-icon">💇</span>
+      <span class="row-label">薄毛でない</span>
+      <div class="row-control">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="hair" checked onchange="calc()">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label" id="hairLabel">ON</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">🚭</span>
+      <span class="row-label">非喫煙者</span>
+      <div class="row-control">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="smoke" checked onchange="calc()">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label" id="smokeLabel">ON</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">🍺</span>
+      <span class="row-label">飲酒習慣なし</span>
+      <div class="row-control">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="alcohol" onchange="calc()">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label" id="alcoholLabel">OFF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">🏃</span>
+      <span class="row-label">運動習慣あり</span>
+      <div class="row-control">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="exercise" onchange="calc()">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label" id="exerciseLabel">OFF</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 婚歴・家族 ── -->
+    <div class="section-header">婚歴・家族</div>
+
+    <div class="row">
+      <span class="row-icon">💍</span>
+      <span class="row-label">離婚歴なし</span>
+      <div class="row-control">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="nodivorce" onchange="calc()">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label" id="nodivorceLabel">OFF</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="row-icon">👶</span>
+      <span class="row-label">子なし</span>
+      <div class="row-control">
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="nochild" onchange="calc()">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label" id="nochildLabel">OFF</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 外見・その他 ── -->
+    <div class="section-header">外見・その他</div>
+
+    <div class="row">
+      <span class="row-icon">✨</span>
+      <span class="row-label">容姿</span>
+      <div class="row-control">
+        <select id="looks">
+          <option value="all" selected>指定なし</option>
+          <option value="average">平均以上</option>
+          <option value="good">やや良い（上位30%）</option>
+          <option value="very_good">良い（上位15%）</option>
+          <option value="excellent">かなり良い（上位5%）</option>
+        </select>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右：結果パネル -->
+  <div class="right-panel">
+
+    <div class="card result-header">
+      <h2>📊 推定結果</h2>
+      <p class="result-subtitle">該当する未婚男性</p>
+      <div class="result-count" id="resultCount">—</div>
+      <div class="badge" id="resultBadge">計算中...</div>
+      <p class="badge-desc" id="badgeDesc"></p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-value" id="statPct">—</div>
+        <div class="stat-label">同年代の未婚男性のうち</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statPref">—</div>
+        <div class="stat-label" id="statPrefLabel">各都道府県に平均</div>
+      </div>
+    </div>
+
+    <div class="card breakdown-card">
+      <h3>📉 条件ごとの絞り込み</h3>
+      <div id="breakdownList"></div>
+      <div class="data-note">
+        出典：国勢調査2020・国税庁民間給与実態統計・金融広報中央委員会・スポーツ庁体力調査<br>
+        文科省学校基本調査・厚労省国民健康栄養調査・人口動態統計・AGA学会推計
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// =============================================
+// 統計データ（2020〜2023年の主要統計から）
+// =============================================
+
+// 年齢帯別 未婚男性人口（国勢調査2020）
+const AGE_DATA = {
+  "all":   { label: "20〜64歳の未婚男性", unmarried: 13_500_000 },
+  "20-24": { label: "20〜24歳の未婚男性", unmarried:  2_900_000 },
+  "25-29": { label: "25〜29歳の未婚男性", unmarried:  2_150_550 },
+  "30-34": { label: "30〜34歳の未婚男性", unmarried:  1_500_000 },
+  "35-39": { label: "35〜39歳の未婚男性", unmarried:  1_050_000 },
+  "40-44": { label: "40〜44歳の未婚男性", unmarried:    800_000 },
+  "45-49": { label: "45〜49歳の未婚男性", unmarried:    700_000 },
+  "50-54": { label: "50〜54歳の未婚男性", unmarried:    620_000 },
+  "55-59": { label: "55〜59歳の未婚男性", unmarried:    490_000 },
+  "60-64": { label: "60〜64歳の未婚男性", unmarried:    390_000 },
+};
+
+// 居住地域（国勢調査2020）
+const REGION_DATA = {
+  "all":   { label: "全国",       rate: 1.000, prefScale: 47 },
+  "tokyo": { label: "東京都",     rate: 0.095, prefScale: 1  },
+  "metro": { label: "首都圏",     rate: 0.280, prefScale: 4  },
+  "kinki": { label: "近畿圏",     rate: 0.150, prefScale: 4  },
+  "urban": { label: "三大都市圏", rate: 0.500, prefScale: 13 },
+  "rural": { label: "地方",       rate: 0.500, prefScale: 34 },
+};
+
+// =============================================
+// 条件付き確率テーブル
+// 学歴・職業・年収・資産の相関を反映
+// =============================================
+
+// 【学歴 → 年収】 P(年収X以上 | 学歴)
+// 出典：国税庁民間給与実態統計2022 + 文科省学校基本調査 + パーソル総研調査から推計
+// 高学歴ほど高収入帯に集積する。旧帝早慶は管理職・専門職比率が高い。
+const INCOME_GIVEN_EDU = {
+  //          all    300    400    500    600    700    800   1000   1200
+  all:       [1.000, 0.600, 0.430, 0.290, 0.190, 0.125, 0.085, 0.045, 0.022],
+  university:[1.000, 0.720, 0.540, 0.380, 0.260, 0.175, 0.120, 0.065, 0.032],
+  march:     [1.000, 0.800, 0.630, 0.460, 0.320, 0.220, 0.155, 0.088, 0.045],
+  top:       [1.000, 0.870, 0.720, 0.560, 0.410, 0.290, 0.210, 0.125, 0.068],
+};
+const INCOME_KEYS = ["all","300","400","500","600","700","800","1000","1200"];
+
+// 【職業 → 年収】 P(年収X以上 | 職業)
+// 出典：厚労省「賃金構造基本統計調査」2022 + 医師・弁護士平均年収調査
+const INCOME_GIVEN_JOB = {
+  //          all    300    400    500    600    700    800   1000   1200
+  all:       [1.000, 0.600, 0.430, 0.290, 0.190, 0.125, 0.085, 0.045, 0.022],
+  company:   [1.000, 0.650, 0.470, 0.310, 0.200, 0.130, 0.088, 0.045, 0.022],
+  pro:       [1.000, 0.980, 0.950, 0.900, 0.820, 0.720, 0.600, 0.400, 0.220],
+  it:        [1.000, 0.820, 0.680, 0.520, 0.370, 0.260, 0.185, 0.100, 0.048],
+  exec:      [1.000, 0.960, 0.920, 0.840, 0.730, 0.600, 0.480, 0.290, 0.150],
+};
+
+// 【学歴 → 職業】 P(職業X | 学歴)
+// 出典：国勢調査2020 職業×学歴クロス集計 + 厚労省推計
+const JOB_GIVEN_EDU = {
+  //             all     company   pro     it      exec
+  all:        { all:1.0, company:0.700, pro:0.015, it:0.080, exec:0.070 },
+  university: { all:1.0, company:0.730, pro:0.025, it:0.110, exec:0.090 },
+  march:      { all:1.0, company:0.740, pro:0.035, it:0.120, exec:0.110 },
+  top:        { all:1.0, company:0.700, pro:0.080, it:0.130, exec:0.160 },
+};
+
+// 【年収 → 資産】 P(資産X以上 | 年収)
+// 出典：金融広報中央委員会「家計の金融行動に関する世論調査」2022
+// 高収入ほど貯蓄率・資産額が高くなる
+const ASSET_GIVEN_INCOME = {
+  //          all    500    1000   2000   3000   5000  10000
+  all:       [1.000, 0.280, 0.150, 0.080, 0.045, 0.020, 0.008],
+  "300":     [1.000, 0.150, 0.065, 0.025, 0.010, 0.004, 0.001],
+  "400":     [1.000, 0.200, 0.090, 0.038, 0.016, 0.006, 0.002],
+  "500":     [1.000, 0.260, 0.125, 0.058, 0.028, 0.010, 0.004],
+  "600":     [1.000, 0.330, 0.170, 0.085, 0.042, 0.016, 0.006],
+  "700":     [1.000, 0.400, 0.220, 0.115, 0.060, 0.024, 0.009],
+  "800":     [1.000, 0.470, 0.280, 0.155, 0.085, 0.035, 0.013],
+  "1000":    [1.000, 0.580, 0.380, 0.230, 0.135, 0.060, 0.024],
+  "1200":    [1.000, 0.680, 0.480, 0.310, 0.195, 0.095, 0.042],
+};
+const ASSET_KEYS = ["all","500","1000","2000","3000","5000","10000"];
+
+// =============================================
+// 単独条件テーブル（学歴・職業・年収・資産が「指定なし」の場合に使用）
+// =============================================
+
+// 学歴分布（文科省学校基本調査2022）
+const EDU_RATE = {
+  all: 1.000, university: 0.380, march: 0.100, top: 0.040,
+};
+
+// 職業分布（国勢調査・厚労省推計）
+const JOB_RATE = {
+  all: 1.000, company: 0.700, pro: 0.015, it: 0.080, exec: 0.070,
+};
+
+// 借金なし（貯蓄超過）割合
+const NODEBT_RATE = 0.70;
+
+// 身長分布（スポーツ庁 平均170.7cm, SD=5.7cm）
+function heightRate(minH) {
+  if (minH === "all") return 1.0;
+  const mean = 170.7, sd = 5.7;
+  return normalCDF(-(parseInt(minH) - mean) / sd);
+}
+
+// BMI分布（厚労省「国民健康・栄養調査」2022 男性）
+const BMI_RATE = { all: 1.000, normal: 0.620, slim: 0.450 };
+
+// 薄毛割合（AGA学会推計 年代別）
+const HAIR_RATE_BY_AGE = {
+  all: 0.60, "20-24": 0.85, "25-29": 0.80, "30-34": 0.72,
+  "35-39": 0.63, "40-44": 0.55, "45-49": 0.48,
+  "50-54": 0.42, "55-59": 0.38, "60-64": 0.35,
+};
+
+// 非喫煙者割合（厚労省「国民健康・栄養調査」2022 男性）
+const SMOKE_RATE_BY_AGE = {
+  all: 0.72, "20-24": 0.82, "25-29": 0.79, "30-34": 0.76,
+  "35-39": 0.73, "40-44": 0.70, "45-49": 0.68,
+  "50-54": 0.65, "55-59": 0.62, "60-64": 0.60,
+};
+
+// 飲酒習慣なし割合（厚労省 2022）
+const ALCOHOL_RATE_BY_AGE = {
+  all: 0.30, "20-24": 0.40, "25-29": 0.35, "30-34": 0.30,
+  "35-39": 0.28, "40-44": 0.27, "45-49": 0.26,
+  "50-54": 0.25, "55-59": 0.24, "60-64": 0.25,
+};
+
+// 運動習慣あり割合（スポーツ庁 2022 週1回以上・30分以上）
+const EXERCISE_RATE_BY_AGE = {
+  all: 0.46, "20-24": 0.42, "25-29": 0.38, "30-34": 0.36,
+  "35-39": 0.38, "40-44": 0.40, "45-49": 0.43,
+  "50-54": 0.47, "55-59": 0.50, "60-64": 0.54,
+};
+
+// 離婚歴なし割合（人口動態統計 年代別）
+const NODIVORCE_RATE_BY_AGE = {
+  all: 0.88, "20-24": 0.99, "25-29": 0.97, "30-34": 0.94,
+  "35-39": 0.90, "40-44": 0.85, "45-49": 0.80,
+  "50-54": 0.75, "55-59": 0.70, "60-64": 0.65,
+};
+
+// 子なし割合（人口動態統計・婚外子率2.4%から推計）
+const NOCHILD_RATE_BY_AGE = {
+  all: 0.97, "20-24": 0.99, "25-29": 0.98, "30-34": 0.97,
+  "35-39": 0.96, "40-44": 0.95, "45-49": 0.94,
+  "50-54": 0.93, "55-59": 0.92, "60-64": 0.91,
+};
+
+// 容姿分布（正規分布仮定）
+const LOOKS_RATE = {
+  all: 1.000, average: 0.500, good: 0.300, very_good: 0.150, excellent: 0.050,
+};
+
+// バッジ定義
+const BADGES = [
+  { max: 5,        label: "👻 ほぼ存在しない",  desc: "理論上ゼロに近い存在です" },
+  { max: 20,       label: "🦄 幻の存在",         desc: "伝説のユニコーンより希少かもしれません" },
+  { max: 100,      label: "🏆 超レア",            desc: "宝くじ1等並みの希少性です" },
+  { max: 500,      label: "💎 天然記念物",         desc: "発見したら国に届け出を" },
+  { max: 2000,     label: "🌟 超高スペック",       desc: "日本中でも数千人以下の存在です" },
+  { max: 10000,    label: "✨ 激レア",             desc: "都道府県に200人もいません" },
+  { max: 50000,    label: "🔥 かなり希少",         desc: "出会える確率はかなり低めです" },
+  { max: 150000,   label: "👍 希少寄り",           desc: "条件はかなり高めです" },
+  { max: 500000,   label: "😊 やや絞り気味",       desc: "少し条件を緩めると出会いが増えます" },
+  { max: 1500000,  label: "📊 適度な絞り込み",     desc: "現実的な条件設定です" },
+  { max: Infinity, label: "🌍 広め",               desc: "出会いの可能性はたくさんあります！" },
+];
+
+// =============================================
+// 正規分布CDF（近似）
+// =============================================
+function normalCDF(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  const phi = 1 - (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * z * z) * poly;
+  return z >= 0 ? phi : 1 - phi;
+}
+
+// =============================================
+// 条件付き確率の参照ヘルパー
+// =============================================
+
+/**
+ * 年収の確率を返す。
+ * 学歴と職業の両方が指定されている場合は幾何平均で合成。
+ * どちらか一方のみ指定されている場合はそのテーブルを使用。
+ * どちらも指定なしの場合はフラットなテーブルを使用。
+ */
+function getIncomeRate(income, edu, job) {
+  if (income === "all") return 1.0;
+  const idx = INCOME_KEYS.indexOf(income);
+  if (idx === -1) return 1.0;
+
+  const hasEdu = edu !== "all";
+  const hasJob = job !== "all";
+
+  if (hasEdu && hasJob) {
+    // 両方指定：幾何平均（過小推定を避けつつ相関を反映）
+    const rEdu = INCOME_GIVEN_EDU[edu][idx];
+    const rJob = INCOME_GIVEN_JOB[job][idx];
+    return Math.sqrt(rEdu * rJob);
+  } else if (hasEdu) {
+    return INCOME_GIVEN_EDU[edu][idx];
+  } else if (hasJob) {
+    return INCOME_GIVEN_JOB[job][idx];
+  } else {
+    return INCOME_GIVEN_EDU["all"][idx];
+  }
+}
+
+/**
+ * 資産の確率を返す。
+ * 年収が指定されている場合は年収条件付きテーブルを使用。
+ */
+function getAssetRate(asset, income) {
+  if (asset === "all") return 1.0;
+  const idx = ASSET_KEYS.indexOf(asset);
+  if (idx === -1) return 1.0;
+
+  // 年収が指定されている場合は条件付きテーブルを使用
+  const incomeKey = income !== "all" ? income : "all";
+  const table = ASSET_GIVEN_INCOME[incomeKey] ?? ASSET_GIVEN_INCOME["all"];
+  return table[idx];
+}
+
+/**
+ * 職業の確率を返す。
+ * 学歴が指定されている場合は条件付きテーブルを使用。
+ */
+function getJobRate(job, edu) {
+  if (job === "all") return 1.0;
+  if (edu !== "all") {
+    return JOB_GIVEN_EDU[edu][job] ?? JOB_RATE[job];
+  }
+  return JOB_RATE[job];
+}
+
+// =============================================
+// 計算ロジック
+// =============================================
+function calc() {
+  const age      = document.getElementById("age").value;
+  const region   = document.getElementById("region").value;
+  const height   = document.getElementById("height").value;
+  const bmi      = document.getElementById("bmi").value;
+  const income   = document.getElementById("income").value;
+  const asset    = document.getElementById("asset").value;
+  const nodebt   = document.getElementById("nodebt").checked;
+  const job      = document.getElementById("job").value;
+  const edu      = document.getElementById("edu").value;
+  const hair     = document.getElementById("hair").checked;
+  const smoke    = document.getElementById("smoke").checked;
+  const alcohol  = document.getElementById("alcohol").checked;
+  const exercise = document.getElementById("exercise").checked;
+  const nodivorce= document.getElementById("nodivorce").checked;
+  const nochild  = document.getElementById("nochild").checked;
+  const looks    = document.getElementById("looks").value;
+
+  // トグルラベル更新
+  const toggles = { hair, smoke, alcohol, exercise, nodebt, nodivorce, nochild };
+  for (const [id, val] of Object.entries(toggles)) {
+    document.getElementById(id + "Label").textContent = val ? "ON" : "OFF";
+  }
+
+  // ベース未婚男性数（地域フィルタ適用）
+  const baseNational = AGE_DATA[age].unmarried;
+  const regionInfo   = REGION_DATA[region];
+  const base         = Math.round(baseNational * regionInfo.rate);
+
+  // ── 経済条件（相関考慮）──
+  // 計算順序：学歴 → 職業（学歴条件付き） → 年収（学歴・職業条件付き） → 資産（年収条件付き）
+  const rEdu     = EDU_RATE[edu];
+  const rJob     = getJobRate(job, edu);           // P(職業 | 学歴)
+  const rIncome  = getIncomeRate(income, edu, job); // P(年収 | 学歴, 職業)
+  const rAsset   = getAssetRate(asset, income);     // P(資産 | 年収)
+  const rNodebt  = nodebt ? NODEBT_RATE : 1.0;
+
+  // ── 身体条件 ──
+  const rHeight  = heightRate(height);
+  const rBmi     = BMI_RATE[bmi];
+
+  // ── 生活習慣（喫煙・飲酒は相関補正あり）──
+  const rHair     = hair     ? (HAIR_RATE_BY_AGE[age]     ?? 0.60) : 1.0;
+  const rSmoke    = smoke    ? (SMOKE_RATE_BY_AGE[age]    ?? 0.72) : 1.0;
+  const rAlcohol  = alcohol  ? (ALCOHOL_RATE_BY_AGE[age]  ?? 0.30) : 1.0;
+  const rExercise = exercise ? (EXERCISE_RATE_BY_AGE[age] ?? 0.46) : 1.0;
+  // 喫煙と飲酒の相関補正（喫煙者は飲酒習慣も多い → 両方指定すると過小になりやすい）
+  const smokeAlcoholCorr = (smoke && alcohol) ? 1.15 : 1.0;
+
+  // ── 婚歴・家族 ──
+  const rNodivorce = nodivorce ? (NODIVORCE_RATE_BY_AGE[age] ?? 0.88) : 1.0;
+  const rNochild   = nochild   ? (NOCHILD_RATE_BY_AGE[age]   ?? 0.97) : 1.0;
+  const divorceChildCorr = (nodivorce && nochild) ? 1.20 : 1.0;
+
+  // ── 外見 ──
+  const rLooks = LOOKS_RATE[looks];
+
+  const total = base
+    * rEdu
+    * rJob
+    * rIncome
+    * rAsset
+    * rNodebt
+    * rHeight
+    * rBmi
+    * rHair
+    * rSmoke
+    * rAlcohol  * smokeAlcoholCorr
+    * rExercise
+    * rNodivorce
+    * rNochild  * divorceChildCorr
+    * rLooks;
+
+  const result = Math.round(total);
+
+  // 表示
+  document.getElementById("resultCount").textContent = formatNum(result) + "人";
+
+  const badge = BADGES.find(b => result < b.max);
+  document.getElementById("resultBadge").textContent = badge.label;
+  document.getElementById("badgeDesc").textContent   = badge.desc;
+
+  // パーセンテージ
+  const pct = total / base * 100;
+  document.getElementById("statPct").textContent =
+    pct < 0.0001 ? pct.toFixed(5) + "%" :
+    pct < 0.01   ? pct.toFixed(4) + "%" :
+    pct < 0.1    ? pct.toFixed(3) + "%" :
+    pct < 1      ? pct.toFixed(2) + "%" :
+    pct < 10     ? pct.toFixed(1) + "%" : Math.round(pct) + "%";
+
+  // 都道府県あたり
+  const prefScale = regionInfo.prefScale;
+  const perPref   = result / prefScale;
+  if (region === "tokyo") {
+    document.getElementById("statPref").textContent     = formatNum(result) + "人";
+    document.getElementById("statPrefLabel").textContent = "東京都全体の推定人数";
+  } else {
+    document.getElementById("statPref").textContent =
+      perPref < 1 ? "0人台" : formatNum(Math.round(perPref)) + "人";
+    document.getElementById("statPrefLabel").textContent =
+      region === "all" ? "各都道府県に平均" : "対象エリア内の都府県に平均";
+  }
+
+  // 内訳
+  renderBreakdown(base, { age, region, edu, job, income, asset, nodebt,
+    height, bmi, hair, smoke, alcohol, exercise, nodivorce, nochild, looks },
+    { rEdu, rJob, rIncome, rAsset, rNodebt, rHeight, rBmi,
+      rHair, rSmoke, rAlcohol, rExercise, rNodivorce, rNochild, rLooks,
+      smokeAlcoholCorr, divorceChildCorr });
+}
+
+function renderBreakdown(base, conds, rates) {
+  const { age, region, edu, job, income, asset, nodebt,
+          height, bmi, hair, smoke, alcohol, exercise, nodivorce, nochild, looks } = conds;
+
+  const items = [];
+  items.push({ label: AGE_DATA[age].label, count: base });
+
+  let cum = base;
+  const steps = [];
+
+  // 地域はbaseに反映済みなので表示のみ
+  if (region !== "all") steps.push({ label: `居住：${REGION_DATA[region].label}`, r: 1.0 });
+
+  // 経済グループ：学歴→職業→年収→資産の順（相関テーブル使用を明示）
+  if (edu    !== "all") steps.push({ label: `学歴：${eduLabel(edu)}`,   r: rates.rEdu });
+  if (job    !== "all") {
+    const tag = edu !== "all" ? "★相関" : "";
+    steps.push({ label: `職業：${jobLabel(job)}${tag}`, r: rates.rJob });
+  }
+  if (income !== "all") {
+    const tag = (edu !== "all" || job !== "all") ? "★相関" : "";
+    steps.push({ label: `年収${income}万円以上${tag}`, r: rates.rIncome });
+  }
+  if (asset  !== "all") {
+    const tag = income !== "all" ? "★相関" : "";
+    steps.push({ label: `資産${asset}万円以上${tag}`, r: rates.rAsset });
+  }
+  if (nodebt) steps.push({ label: `借金なし（貯蓄超過）`, r: rates.rNodebt });
+
+  // 身体
+  if (height !== "all") steps.push({ label: `身長${height}cm以上`,    r: rates.rHeight });
+  if (bmi    !== "all") steps.push({ label: `体型：${bmiLabel(bmi)}`, r: rates.rBmi });
+
+  // 生活習慣
+  if (hair)     steps.push({ label: `薄毛でない`,   r: rates.rHair });
+  if (smoke)    steps.push({ label: `非喫煙者`,     r: rates.rSmoke });
+  if (alcohol)  steps.push({ label: `飲酒習慣なし${smoke ? "★相関" : ""}`, r: rates.rAlcohol * (smoke ? rates.smokeAlcoholCorr : 1.0) });
+  if (exercise) steps.push({ label: `運動習慣あり`, r: rates.rExercise });
+
+  // 婚歴・家族
+  if (nodivorce) steps.push({ label: `離婚歴なし`,                          r: rates.rNodivorce });
+  if (nochild)   steps.push({ label: `子なし${nodivorce ? "★相関" : ""}`,  r: rates.rNochild * (nodivorce ? rates.divorceChildCorr : 1.0) });
+
+  // 外見
+  if (looks !== "all") steps.push({ label: `容姿：${looksLabel(looks)}`, r: rates.rLooks });
+
+  for (const s of steps) {
+    cum = Math.round(cum * s.r);
+    items.push({ label: s.label, count: cum });
+  }
+
+  const maxCount = items[0].count;
+  const list = document.getElementById("breakdownList");
+  list.innerHTML = items.map((item, i) => {
+    const barPct = Math.max(1, (item.count / maxCount) * 100);
+    const isLast = i === items.length - 1;
+    const hasCorr = item.label.includes("★相関");
+    const dispLabel = item.label.replace("★相関", "");
+    return `
+      <div class="breakdown-item">
+        <span class="breakdown-label" title="${hasCorr ? '相関補正あり' : ''}">
+          ${dispLabel}${hasCorr ? ' <span style="color:#7c6af5;font-size:10px;">相関補正</span>' : ''}
+        </span>
+        <div class="bar-wrap">
+          <div class="bar-fill ${isLast ? 'highlight' : ''}" style="width:${barPct}%"></div>
+        </div>
+        <span class="breakdown-count">${formatNum(item.count)}人</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function eduLabel(v) {
+  return { university: "大学卒以上", march: "MARCH・関関同立以上", top: "旧帝大・早慶以上" }[v] || v;
+}
+function looksLabel(v) {
+  return { average: "平均以上", good: "やや良い（上位30%）", very_good: "良い（上位15%）", excellent: "かなり良い（上位5%）" }[v] || v;
+}
+function jobLabel(v) {
+  return { company: "会社員・公務員", pro: "医師・弁護士等", it: "ITエンジニア", exec: "管理職・役員" }[v] || v;
+}
+function bmiLabel(v) {
+  return { normal: "標準（BMI 18.5〜25）", slim: "細め〜標準（BMI〜23）" }[v] || v;
+}
+
+function formatNum(n) {
+  if (n === 0) return "0";
+  if (n < 1)   return "< 1";
+  return n.toLocaleString("ja-JP");
+}
+
+function resetAll() {
+  document.getElementById("age").value       = "25-29";
+  document.getElementById("region").value    = "all";
+  document.getElementById("height").value    = "all";
+  document.getElementById("bmi").value       = "all";
+  document.getElementById("income").value    = "all";
+  document.getElementById("asset").value     = "all";
+  document.getElementById("nodebt").checked  = false;
+  document.getElementById("job").value       = "all";
+  document.getElementById("edu").value       = "all";
+  document.getElementById("hair").checked    = false;
+  document.getElementById("smoke").checked   = false;
+  document.getElementById("alcohol").checked = false;
+  document.getElementById("exercise").checked= false;
+  document.getElementById("nodivorce").checked= false;
+  document.getElementById("nochild").checked  = false;
+  document.getElementById("looks").value     = "all";
+  calc();
+}
+
+// セレクト変更時に自動計算
+document.querySelectorAll("select").forEach(el => el.addEventListener("change", calc));
+
+// 初期計算
+calc();
+</script>
+</body>
+</html>

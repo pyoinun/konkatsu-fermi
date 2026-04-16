@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- アクセントバー -->
+  <rect x="0" y="0" width="1200" height="8" fill="url(#accent)"/>
+
+  <!-- 左側：メインコピー -->
+  <text x="80" y="160" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="56" font-weight="900" fill="white" letter-spacing="-1">あなたの条件、</text>
+  <text x="80" y="240" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="56" font-weight="900" fill="white" letter-spacing="-1">何人いる？</text>
+
+  <!-- バッジ風テキスト -->
+  <rect x="80" y="272" width="440" height="52" rx="26" fill="url(#accent)"/>
+  <text x="300" y="307" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">💎 天然記念物レベルを探してませんか？</text>
+
+  <!-- 説明文 -->
+  <text x="80" y="390" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="26" fill="#aab4c8" letter-spacing="0.5">年収・身長・学歴・職業など</text>
+  <text x="80" y="430" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="26" fill="#aab4c8" letter-spacing="0.5">15項目の条件から対象人数を推定</text>
+  <text x="80" y="475" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="22" fill="#667eea">国勢調査・国税庁統計など実データ使用</text>
+
+  <!-- 右側：ダミー結果カード -->
+  <rect x="680" y="80" width="440" height="470" rx="20" fill="white" opacity="0.07"/>
+  <rect x="700" y="100" width="400" height="430" rx="16" fill="white" opacity="0.05"/>
+
+  <!-- カード内容 -->
+  <text x="900" y="160" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="18" fill="#aab4c8" text-anchor="middle">該当する未婚男性</text>
+  <text x="900" y="250" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="88" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-4">38人</text>
+
+  <rect x="790" y="270" width="220" height="44" rx="22" fill="url(#accent)"/>
+  <text x="900" y="299" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="18" font-weight="700" fill="white" text-anchor="middle">💎 天然記念物</text>
+
+  <!-- 統計バー -->
+  <rect x="720" y="340" width="360" height="1" fill="white" opacity="0.15"/>
+
+  <text x="720" y="375" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="14" fill="#aab4c8">25〜29歳の未婚男性</text>
+  <rect x="720" y="385" width="360" height="12" rx="6" fill="white" opacity="0.1"/>
+  <rect x="720" y="385" width="360" height="12" rx="6" fill="#667eea"/>
+  <text x="1082" y="396" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="13" fill="white" text-anchor="end">2,150,550人</text>
+
+  <text x="720" y="425" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="14" fill="#aab4c8">年収800万円以上</text>
+  <rect x="720" y="435" width="360" height="12" rx="6" fill="white" opacity="0.1"/>
+  <rect x="720" y="435" width="90" height="12" rx="6" fill="#667eea"/>
+  <text x="1082" y="446" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="13" fill="white" text-anchor="end">25,807人</text>
+
+  <text x="720" y="475" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="14" fill="#aab4c8">旧帝大・早慶以上</text>
+  <rect x="720" y="485" width="360" height="12" rx="6" fill="white" opacity="0.1"/>
+  <rect x="720" y="485" width="22" height="12" rx="6" fill="#764ba2"/>
+  <text x="1082" y="496" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="13" fill="white" text-anchor="end">1,032人</text>
+
+  <!-- フッター -->
+  <text x="80" y="590" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="18" fill="#555e7a">婚活フェルミ推定ツール</text>
+  <text x="1120" y="590" font-family="'Hiragino Sans', 'Yu Gothic', sans-serif" font-size="16" fill="#555e7a" text-anchor="end">#婚活 #フェルミ推定</text>
+</svg>
